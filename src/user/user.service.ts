@@ -3,7 +3,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindManyOptions } from 'typeorm';
+import { FindUserDto } from './dto/find-user.dto';
 
 @Injectable()
 export class UserService {
@@ -16,8 +17,9 @@ export class UserService {
     await this.userRepository.save(user);
   }
 
-  findAll() {
-    return this.userRepository.find();
+  findAll(queryDto: FindUserDto) {
+    const query = {...queryDto} as FindManyOptions<User>
+    return this.userRepository.find(query);
   }
 
   findOne(id: number) {
