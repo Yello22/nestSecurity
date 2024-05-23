@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -12,28 +12,60 @@ export class UserService {
     @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto): Promise<User> {
     const user = this.userRepository.create(createUserDto);
-    await this.userRepository.save(user);
-  }
-
-  findAll(queryDto: FindUserDto) {
-    const query = {...queryDto} as FindManyOptions<User>
-    return this.userRepository.find(query);
-  }
-
-  findOne(id: number) {
-    return this.userRepository.findOneBy({ id });
-  }
-
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    const oldUser = await this.userRepository.findOneBy({ id });
-    const user = Object.assign(oldUser, updateUserDto);
     return this.userRepository.save(user);
   }
 
-  async remove(id: number) {
-    const userToRemove = await this.userRepository.findOneBy({ id });
-    return this.userRepository.remove(userToRemove);
+  async findAll(queryDto: FindUserDto): Promise<User[]> {
+    const query: FindManyOptions<User> = {};
+    if (queryDto) {
+      query.where = queryDto;
+    }
+
+    return this.userRepository.find(query);
+  }
+
+  async findOne(id: number): Promise<User> {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    return user;
+  }
+
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.userRepository.preload({
+      id,
+      ...updateUserDto,
+    });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    return this.userRepository.save(user);
+  }
+
+  async remove(id: number): Promise<void> {
+    const user = await this.userRepository.findOneBy({ id });
+    await this.userRepository.remove(user);
+  }
+
+  async setTwoFactorAuthenticationSecret(secret: string, id: number) {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    user.twoFactorAuthenticationSecret = secret;
+    return this.userRepository.save(user);
+  }
+
+  async turnOnTwoFactorAuthentication(id: number) {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+
+    user.isTwoFactorAuthenticationEnabled = true;
+    return this.userRepository.save(user);
   }
 }

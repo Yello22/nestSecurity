@@ -1,13 +1,18 @@
-import { Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+@Entity()
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({
+    default: '',
+  })
   firstName: string;
 
-  @Column()
+  @Column({
+    default: '',
+  })
   lastName: string;
 
   @Column()
@@ -26,7 +31,9 @@ export class User {
   @Column()
   password: string;
 
-  @Column()
+  @Column({
+    default: '',
+  })
   twoFactorAuthenticationSecret: string;
 
   @Column({
