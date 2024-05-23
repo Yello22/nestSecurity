@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
 import { AuthenticationController } from './authentication.controller';
 import { UserModule } from 'src/user/user.module';
-import { JwtService, JwtModule } from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 import { LocalStrategy } from './local/local.strategy';
 import { JwtStrategy } from './jwt/jwt.strategy';
 import { Jwt2faStrategy } from './jwt-2fa/jwt-2fa.strategy';
