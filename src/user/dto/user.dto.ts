@@ -8,7 +8,7 @@ export class UserDto {
   email: string;
 
   @Expose()
-  access_token: string;
+  accessToken: string;
 
   @Exclude()
   password: string;

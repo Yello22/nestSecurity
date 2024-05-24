@@ -12,21 +12,21 @@ import { User } from 'src/user/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { authenticator } from 'otplib';
 import { toDataURL } from 'qrcode';
+import { ProtectedRequest } from 'src/request/request.interface';
 
 @Injectable()
 export class AuthenticationService {
   constructor(
-    private userService: UserService,
-    private jwtService: JwtService,
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async validateUser(email: string, password: string) {
     const query: FindUserDto = { email };
-
     const [user] = await this.userService.findAll(query);
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Invalid email or password.');
     }
 
     const { password: _, ...result } = user;
@@ -35,38 +35,38 @@ export class AuthenticationService {
 
   async alreadyHaveAccount(email: string): Promise<boolean> {
     const query: FindUserDto = { email };
-
     const [user] = await this.userService.findAll(query);
+    return !!user;
+  }
+
+  async googleLogin(req: ProtectedRequest) {
+    if (!req.user) {
+      throw new NotFoundException('No user from Google.');
+    }
+
+    const query: FindUserDto = { email: req.user.email };
+    let [user] = await this.userService.findAll(query);
 
     if (!user) {
-      return false;
+      user = await this.userService.create(req.user);
     }
 
-    return true;
-  }
-
-  async googleLogin(req) {
-    if (!req.user) {
-      return new NotFoundException('No user from google');
-    }
-
-     const query: FindUserDto = { req.user.email };
-
-    const [user] = await this.userService.findAll(query) 
-    return {
-      message: 'User information from google',
-      user: req.user,
-    };
-  }
-
-  async login(user: Partial<User>) {
     const payload = {
       email: user.email,
+      isGoogleAuthenticated: true,
     };
 
     return {
       email: payload.email,
-      access_token: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload),
+    };
+  }
+
+  async login(user: Partial<User>) {
+    const payload = { email: user.email };
+    return {
+      email: payload.email,
+      accessToken: this.jwtService.sign(payload),
     };
   }
 
@@ -76,13 +76,14 @@ export class AuthenticationService {
 
     if (existingUser) {
       throw new ConflictException(
-        'You already have an account, please sign in to get access.',
+        'You already have an account. Please sign in to access.',
       );
     }
 
     const saltOrRounds = 10;
-    body.password = await bcrypt.hash(body.password, saltOrRounds);
-    return this.userService.create(body);
+    const hashedPassword = await bcrypt.hash(body.password, saltOrRounds);
+    const newUser = { ...body, password: hashedPassword };
+    return this.userService.create(newUser);
   }
 
   async loginWith2fa(user: Partial<User>) {
@@ -94,13 +95,12 @@ export class AuthenticationService {
 
     return {
       email: payload.email,
-      access_token: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload),
     };
   }
 
   async generateTwoFactorAuthenticationSecret(user: User) {
     const secret = authenticator.generateSecret();
-
     const otpAuthUrl = authenticator.keyuri(
       user.email,
       `${process.env.AUTH_APP_NAME}`,
@@ -109,16 +109,12 @@ export class AuthenticationService {
 
     await this.userService.setTwoFactorAuthenticationSecret(secret, user.id);
 
-    return {
-      secret,
-      otpAuthUrl,
-    };
+    return { secret, otpAuthUrl };
   }
 
   async generateQrCodeDataUrl(otpAuthUrl: string) {
     const base64Image = await toDataURL(otpAuthUrl);
-    const base64Data = base64Image.replace(/^data:image\/png;base64,/, '');
-    return Buffer.from(base64Data, 'base64');
+    return Buffer.from(base64Image.split(',')[1], 'base64');
   }
 
   isTwoAuthenticationCodeValid(

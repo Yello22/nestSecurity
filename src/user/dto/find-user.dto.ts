@@ -18,7 +18,7 @@ export class FindUserDto extends PartialType(User) {
   isActive?: boolean;
 
   @IsBoolean()
-  isVerified?: boolean;
+  verified?: boolean;
 
   @IsBoolean()
   isTwoFactorAuthenticationEnabled?: boolean;

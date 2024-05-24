@@ -9,6 +9,7 @@ import {
   Response,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ProtectedRequest } from 'src/request/request.interface';
 import { AuthenticationService } from './authentication.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { LocalAuthGuard } from './local/local-auth.guard';
@@ -36,14 +37,14 @@ export class AuthenticationController {
 
   @Get('google/redirect')
   @UseGuards(GoogleAuthGuard)
-  googleAuthRedirect(@Request() req) {
+  googleAuthRedirect(@Request() req: ProtectedRequest) {
     return this.authenticationService.googleLogin(req);
   }
 
   @Post('login')
   @UseGuards(LocalAuthGuard)
   @HttpCode(200)
-  async login(@Request() req) {
+  async login(@Request() req: ProtectedRequest) {
     const user: Partial<User> = req.user;
     return this.authenticationService.login(user);
   }
@@ -55,7 +56,7 @@ export class AuthenticationController {
 
   @Post('2fa/generate')
   @UseGuards(JwtAuthGuard)
-  async register(@Request() req, @Response() res) {
+  async register(@Request() req: ProtectedRequest, @Response() res) {
     const { otpAuthUrl } =
       await this.authenticationService.generateTwoFactorAuthenticationSecret(
         req.user,
@@ -70,7 +71,10 @@ export class AuthenticationController {
 
   @Post('2fa/turn-on')
   @UseGuards(JwtAuthGuard)
-  async turnOnTwoFactorAuthentication(@Request() req, @Body() body) {
+  async turnOnTwoFactorAuthentication(
+    @Request() req: ProtectedRequest,
+    @Body() body,
+  ) {
     const isCodeValid = this.authenticationService.isTwoAuthenticationCodeValid(
       body.twoFactorAuthenticationCode,
       req.user,
@@ -86,7 +90,7 @@ export class AuthenticationController {
   @Post('2fa/authenticate')
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
-  async authenticate(@Request() req, @Body() body) {
+  async authenticate(@Request() req: ProtectedRequest, @Body() body) {
     const isCodeValid = this.authenticationService.isTwoAuthenticationCodeValid(
       body.twoFactorAuthenticationCode,
       req.user,
