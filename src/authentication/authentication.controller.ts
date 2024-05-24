@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   Post,
+  Get,
   UseGuards,
   Request,
   Response,
@@ -16,6 +17,7 @@ import { JwtAuthGuard } from './jwt/jwt-auth-guard';
 import { UserService } from 'src/user/user.service';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { UserDto } from 'src/user/dto/user.dto';
+import { GoogleAuthGuard } from './google/google-auth.guard';
 
 @Controller('auth')
 @Serialize(UserDto)
@@ -24,6 +26,19 @@ export class AuthenticationController {
     private readonly authenticationService: AuthenticationService,
     private readonly userService: UserService,
   ) {}
+
+  @Get('google/signup')
+  @UseGuards(GoogleAuthGuard)
+  @HttpCode(200)
+  async googleLogin() {
+    /* TODO document why this async method 'googleLogin' is empty */
+  }
+
+  @Get('google/redirect')
+  @UseGuards(GoogleAuthGuard)
+  googleAuthRedirect(@Request() req) {
+    return req.user;
+  }
 
   @Post('login')
   @UseGuards(LocalAuthGuard)

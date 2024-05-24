@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  NotFoundException,
 } from '@nestjs/common';
 import { FindUserDto } from 'src/user/dto/find-user.dto';
 import { UserService } from 'src/user/user.service';
@@ -30,6 +31,16 @@ export class AuthenticationService {
 
     const { password: _, ...result } = user;
     return result;
+  }
+
+  async googleLogin(req) {
+    if (!req.user) {
+      return new NotFoundException('No user from google');
+    }
+    return {
+      message: 'User information from google',
+      user: req.user,
+    };
   }
 
   async login(user: Partial<User>) {

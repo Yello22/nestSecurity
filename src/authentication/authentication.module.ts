@@ -7,6 +7,7 @@ import { LocalStrategy } from './local/local.strategy';
 import { JwtStrategy } from './jwt/jwt.strategy';
 import { Jwt2faStrategy } from './jwt-2fa/jwt-2fa.strategy';
 import { ConfigModule } from '@nestjs/config';
+import { GoogleStrategy } from './google/google-auth.strategy';
 
 @Module({
   controllers: [AuthenticationController],
@@ -15,6 +16,7 @@ import { ConfigModule } from '@nestjs/config';
     LocalStrategy,
     JwtStrategy,
     Jwt2faStrategy,
+    GoogleStrategy,
   ],
   imports: [
     UserModule,
