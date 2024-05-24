@@ -33,10 +33,26 @@ export class AuthenticationService {
     return result;
   }
 
+  async alreadyHaveAccount(email: string): Promise<boolean> {
+    const query: FindUserDto = { email };
+
+    const [user] = await this.userService.findAll(query);
+
+    if (!user) {
+      return false;
+    }
+
+    return true;
+  }
+
   async googleLogin(req) {
     if (!req.user) {
       return new NotFoundException('No user from google');
     }
+
+     const query: FindUserDto = { req.user.email };
+
+    const [user] = await this.userService.findAll(query) 
     return {
       message: 'User information from google',
       user: req.user,
