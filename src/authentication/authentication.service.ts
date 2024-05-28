@@ -4,15 +4,15 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import { FindUserDto } from 'src/user/dto/find-user.dto';
-import { UserService } from 'src/user/user.service';
+import { FindUserDto } from '../user/dto/find-user.dto';
+import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
-import { User } from 'src/user/entities/user.entity';
+import { CreateUserDto } from '../user/dto/create-user.dto';
+import { User } from '../user/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { authenticator } from 'otplib';
 import { toDataURL } from 'qrcode';
-import { ProtectedRequest } from 'src/request/request.interface';
+import { ProtectedRequest } from '../request/request.interface';
 
 @Injectable()
 export class AuthenticationService {
@@ -29,6 +29,7 @@ export class AuthenticationService {
       throw new UnauthorizedException('Invalid email or password.');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...result } = user;
     return result;
   }
@@ -82,8 +83,14 @@ export class AuthenticationService {
 
     const saltOrRounds = 10;
     const hashedPassword = await bcrypt.hash(body.password, saltOrRounds);
-    const newUser = { ...body, password: hashedPassword };
-    return this.userService.create(newUser);
+
+    const payload = { email: body.email };
+
+    return {
+      ...body,
+      password: hashedPassword,
+      accessToken: this.jwtService.sign(payload),
+    };
   }
 
   async loginWith2fa(user: Partial<User>) {

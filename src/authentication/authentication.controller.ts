@@ -9,15 +9,15 @@ import {
   Response,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ProtectedRequest } from 'src/request/request.interface';
+import { ProtectedRequest } from '../request/request.interface';
 import { AuthenticationService } from './authentication.service';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { CreateUserDto } from '../user/dto/create-user.dto';
 import { LocalAuthGuard } from './local/local-auth.guard';
-import { User } from 'src/user/entities/user.entity';
+import { User } from '../user/entities/user.entity';
 import { JwtAuthGuard } from './jwt/jwt-auth-guard';
-import { UserService } from 'src/user/user.service';
-import { Serialize } from 'src/interceptors/serialize.interceptor';
-import { UserDto } from 'src/user/dto/user.dto';
+import { UserService } from '../user/user.service';
+import { Serialize } from '../interceptors/serialize.interceptor';
+import { UserDto } from '../user/dto/user.dto';
 import { GoogleAuthGuard } from './google/google-auth.guard';
 
 @Controller('auth')
